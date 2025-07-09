@@ -711,17 +711,18 @@ class mode2_qp:
 
 # SANDRO's functions to solve for the modes
 
-def solve_mode1(k, cosmo, precision1=1e-8, precision2=1, max_time=-1.0):
+def solve_mode1(k, cosmo, precision1=1e-8, precision2=1, max_time=-1.0, cross_size=1e-80):
     # Defining relative tolerance for integration
-    prec = 1.0e-7
+    prec = 1.0e-2
     # Ratio potential frequency to define cross time
-    cross_size = 1.0e-13
+    cross_size = 1.0e-6
 
     pert = Nc.HIPertTwoFluids.new()
     pert.set_stiff_solver(True)
     pert.props.reltol = prec
     pert.set_mode_k(k)
-    alpha_try = -cosmo.abs_alpha(1.0e-14 * k**2)
+    alpha_try = -cosmo.abs_alpha(1.0e-4 * k**2)
+    print(alpha_try)
     ci = Ncm.Vector.new(8)
     alphai = pert.get_cross_time(cosmo, Nc.HIPertTwoFluidsCross.MODE1MAIN, alpha_try, cross_size)
     pert.get_init_cond_zetaS(cosmo, alphai, 1, 0.25 * math.pi, ci)
@@ -733,17 +734,18 @@ def solve_mode1(k, cosmo, precision1=1e-8, precision2=1, max_time=-1.0):
     #gc.collect()
     return res
 
-def solve_mode2(k, cosmo, precision1=1e-8, precision2=1, max_time=-1.0):
+def solve_mode2(k, cosmo, precision1=1e-8, precision2=1, max_time=-1.0, prec=1e-8, cross_size=1e-6, alpha_try=-120):
     # Defining relative tolerance for integration
-    prec = 1.0e-7
+    #prec = 1.0e-8
     # Ratio potential frequency to define cross time
-    cross_size = 1.0e-5
+    #cross_size = 1.0e-6
 
     pert = Nc.HIPertTwoFluids.new()
     pert.set_stiff_solver(True)
     pert.props.reltol = prec
     pert.set_mode_k(k)
-    alpha_try = -cosmo.abs_alpha(1.0e-14 * k**2)
+    #alpha_try = -cosmo.abs_alpha(1.0e-14 * k**2)
+    print(alpha_try)
     ci = Ncm.Vector.new(8)
     alphai = pert.get_cross_time(cosmo, Nc.HIPertTwoFluidsCross.MODE2MAIN, alpha_try, cross_size)
     pert.get_init_cond_zetaS(cosmo, alphai, 2, 0.25 * math.pi, ci)
@@ -805,9 +807,11 @@ class mode_1:
     return f1 * np.array(self.NcmMatrix.get_col(8).dup_array())
 
 # Initial condition 2
+
+# Eduardo, I modified this function, adding the parameters prec, cross_size and alpha_try, that control the initial time
 class mode_2:
-  def __init__(self, k, cosmo, precision1=1e-8, precision2 = 1, max_time=-1):
-    self.NcmMatrix = solve_mode2(k, cosmo, precision1, precision2, max_time)
+  def __init__(self, k, cosmo, precision1=1e-8, precision2 = 1, max_time=-1, prec=1e-8, cross_size=1e-6, alpha_try=-120):
+    self.NcmMatrix = solve_mode2(k, cosmo, precision1, precision2, max_time, prec=prec, cross_size = cross_size, alpha_try = alpha_try)
     self.t = np.array(self.NcmMatrix.get_col(0).dup_array())
     self.model = cosmo
     self.k = k
